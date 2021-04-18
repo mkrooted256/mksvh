@@ -1,0 +1,21 @@
+{
+  "name": "svideohosting",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node index.js",
+    "code": "node codemanager.js"
+  },
+  "author": "koreshov.m@gmail.com",
+  "license": "ISC",
+  "dependencies": {
+    "@api.video/nodejs-sdk": "^1.10.2",
+    "csv": "^5.5.0",
+    "dotenv": "^8.2.0",
+    "ejs": "^3.1.6",
+    "express": "^4.17.1",
+    "uuid": "^8.3.2"
+  }
+}
