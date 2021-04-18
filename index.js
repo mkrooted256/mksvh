@@ -1,16 +1,40 @@
 const Express = require("express")
 const fs = require('fs')
-const csv_parse = require('csv-parse/lib/sync')
-const csv_stringify = require('csv-stringify/lib/sync')
+const apiVideoSdk = require('@api.video/nodejs-sdk')
 
-const apiVideo = require('@api.video/nodejs-sdk');
-let client;
+let db = require('./db.js');
+const { inspect } = require("util");
+
+let apiVideo;
 if (process.env.APIVIDEO_SANDBOX)
-    client = new apiVideo.ClientSandbox({ apiKey: process.env.APIVIDEO_KEY });
+    apiVideo = new apiVideoSdk.ClientSandbox({ apiKey: process.env.APIVIDEO_KEY })
 else
-    client = new apiVideo.Client({ apiKey: process.env.APIVIDEO_KEY });
+    apiVideo = new apiVideoSdk.Client({ apiKey: process.env.APIVIDEO_KEY })
 
+    
 const port = process.env.PORT || 9000
+
+
+db.import('db')
+// db views
+codes = db.tables.codes.data
+videos = db.tables.videos.data
+
+function exitHandler() {
+    db.save('db')
+    process.exit();
+}
+
+//catches ctrl+c event
+process.on('SIGINT', exitHandler);
+
+// catches "kill pid" (for example: nodemon restart)
+process.on('SIGUSR1', exitHandler);
+process.on('SIGUSR2', exitHandler);
+
+//catches uncaught exceptions
+process.on('uncaughtException', exitHandler);
+process.on('unhandledRejection', exitHandler);
 
 
 app = Express()
@@ -20,10 +44,11 @@ app.set('view engine', 'ejs')
 app.get('/', function(req, res) {
     res.render('index.ejs')
 })
+app.get('/admin', function(req, res) {
+    res.json(db);
+})
 
 app.get('/access', function(req, res) {
-    let codes =  csv_parse(fs.readFileSync('db/access.csv'), { columns: true });
-    let videos = csv_parse(fs.readFileSync('db/videos.csv'), { columns: true });
 
 
     let accesscode = req.query.accesscode;
@@ -57,20 +82,13 @@ app.get('/access', function(req, res) {
             console.log('notfound2');
             return;
         } else
-            client.videos.get(vid.remote_video_id).then(function(video) {
+            apiVideo.videos.get(vid.remote_video_id).then(function(video) {
                 res.render('player.ejs', {player: video.assets.iframe});
         
                 // Add time limits for this access code
                 if (code.type > 0 && code.t_start == 0) {
                     code.t_start = Date.now();
                     code.t_end = code.t_start + code.type * 1000;
-                    fs.writeFileSync(
-                        'db/access.csv', 
-                        csv_stringify(codes, {
-                            header: true,
-                            columns: ['code', 'type', 'video_id', 't_start', 't_end', 'who']
-                        })
-                    );
                 }
             });
     }
@@ -79,3 +97,5 @@ app.get('/access', function(req, res) {
 app.listen(port, () => {
     console.log(`Example app listening at http://localhost:${port}`)
   })
+
+  

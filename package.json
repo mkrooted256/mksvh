@@ -5,8 +5,9 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node index.js",
-    "code": "node codemanager.js"
+    "start": "env-cmd node index.js --unhandled-rejections=throw",
+    "codes": "env-cmd node scripts/codemanager.js",
+    "init_video": "env-cmd node scripts/init_video.js"
   },
   "author": "koreshov.m@gmail.com",
   "license": "ISC",
@@ -15,7 +16,9 @@
     "csv": "^5.5.0",
     "dotenv": "^8.2.0",
     "ejs": "^3.1.6",
+    "env-cmd": "^10.1.0",
     "express": "^4.17.1",
+    "mongodb": "^3.6.6",
     "uuid": "^8.3.2"
   }
 }

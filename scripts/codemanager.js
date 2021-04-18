@@ -1,19 +1,16 @@
 const fs = require('fs')
-const csv_parse = require('csv-parse/lib/sync')
-const csv_stringify = require('csv-stringify/lib/sync')
 const uuid = require('uuid')
 
-const { times } = require('./consts') 
+let db = require('../db')
+
+const { times } = require('../consts') 
 const argv = process.argv
 const root_uuid = process.env.ROOT_UUID
 const cmd = argv[2]
 
-let codes = csv_parse(fs.readFileSync('db/access.csv'), {
-    columns: true
-})
-let videos = csv_parse(fs.readFileSync('db/videos.csv'), {
-    columns: true
-})
+db.import('db')
+let codes = db.tables.codes.data
+let videos = db.tables.videos.data
 
 if (cmd == 'list') {
     console.log("Codes:\n", codes)
@@ -44,14 +41,16 @@ if (cmd == 'list') {
     }
     if (parsed) {
         for (let i=0; i<count; i++) {
-            let newrecord = [
-                uuid.v4(),
-                access_type,
-                local_video_id,
-                0, 0, argv[6+i]
-            ]
-            let csv = String(newrecord);
-            fs.appendFileSync('db/access.csv', csv+'\n');
+            let newrecord = {
+                code: uuid.v4(),
+                type: access_type,
+                video_id: local_video_id,
+                t_start: 0, 
+                t_end: 0, 
+                who: argv[6+i]
+            }
+            let csv = String(Object.values(newrecord));
+            codes.push(newrecord);
             console.log(csv);
         }
         
@@ -61,3 +60,5 @@ if (cmd == 'list') {
 } else {
     console.error("Unknown command\n");
 }
+
+db.save('db');
